@@ -1,5 +1,5 @@
-# MapSploit
+<p align="center">
+  <img src="https://github.com/CorvusCodex/MapSploit/blob/main/MapSploit.png?raw=true">
+</p>
 
-| / | / | | | () |
-| \ / | __ _ _ | ( _ __ | | ___ | | | |/| |/ ` | ’ \_ | '_ | |/ _ | | | | | | | (| | |) |) | |) | | () | | | || ||_,| .//| ./|_|__/||_| | | | |
-|| ||
+# MapSploit
