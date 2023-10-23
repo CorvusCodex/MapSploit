@@ -4,9 +4,7 @@
 
 # MapSploit
 
-MNetwork Vulnerability Scanner
-
-!Banner
+Network Vulnerability Scanner
 
 ## Description
 
