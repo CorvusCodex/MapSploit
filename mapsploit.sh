@@ -93,9 +93,13 @@ msfconsole -qx "
     use auxiliary/scanner/http/dir_scanner;
     set RHOSTS $network;
     run;
+    use auxiliary/scanner/http/sqlmap;
+    set RHOSTS $network;
+    run;
     search type:exploit name:<service-name>;
     exit
 " > report.txt
+
 
 if [ $? -ne 0 ]; then
     echo "Failed to execute msfconsole commands"
