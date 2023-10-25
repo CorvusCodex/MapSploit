@@ -34,6 +34,16 @@ MapSploit is a bash script for a network vulnerability scanning. MapSploit check
 2. Follow the prompts in the terminal to install any necessary packages.
 3. The results of the scan will be saved to `report.txt` in the same directory.
 
+## Parameters
+
+The script accepts the following command-line arguments:
+
+1. `network` (required): The target network to scan. This should be provided in CIDR notation (e.g., `192.168.1.0/24`).
+
+2. `schedule` (optional): A cron schedule for running the script at specific times. This should be provided in cron format (e.g., `0 2 * * *` for running the script every day at 2 AM). If this argument is provided, the script will add a cron job to run itself with the same network at the specified times.
+
+`./script.sh 192.168.1.0/24 "0 2 * * *"`
+
 ## Support
 
 Support my work:
