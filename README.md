@@ -4,11 +4,7 @@
 
 # MapSploit
 
-Network Vulnerability Scanner
-
-## Description
-
-MapSploit is a bash script for a network vulnerability scanning. MapSploit checks if Metasploit and Nmap are installed on your system, installs them if they're not, and then uses them to scan a target network for vulnerabilities.
+MapSploit is a bash script for a powerfull network vulnerability scanning. MapSploit checks if Metasploit and Nmap are installed on your system, installs them if they're not, and then uses them to scan a target network for vulnerabilities.
 
 ## Installation
 
