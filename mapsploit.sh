@@ -93,9 +93,6 @@ msfconsole -qx "
     use auxiliary/scanner/http/dir_scanner;
     set RHOSTS $network;
     run;
-    use auxiliary/scanner/http/sqlmap;
-    set RHOSTS $network;
-    run;
     search type:exploit name:<service-name>;
     exit
 " > report.txt
