@@ -70,6 +70,12 @@ then
     exit
 fi
 
+# Check if cron is installed, if not, install it
+install_package cron
+
+# Check if mail is installed, if not, install it
+install_package mailutils
+
 # Check if Metasploit is installed and update it
 if ! command_exists msfconsole; then install_package metasploit-framework; else update_package metasploit-framework; fi
 
@@ -86,6 +92,9 @@ IFS=',' read -ra ips <<< "$1"
 # Define the cron schedule as an optional second command-line argument
 schedule=$2
 
+# Define the email address as an optional third command-line argument
+email=$3
+
 # If a cron schedule was provided, add a cron job to run this script with the same IPs at the specified times
 if [ -n "$schedule" ]; then
     (crontab -l ; echo "$schedule $0 $1") | crontab -
@@ -95,7 +104,7 @@ fi
 # Loop over each IP and run the scan
 for ip in "${ips[@]}"; do
 
-    # Start msfconsole with the commands and save output to a file
+    # Start msfconsole with the commands and save output to a file named with IP address for uniqueness 
     msfconsole -qx "
         workspace -a myworkspace;
         db_nmap -A -sV -O -p- --script=vuln $ip;
@@ -120,6 +129,13 @@ for ip in "${ips[@]}"; do
     echo "Script executed successfully on IP $ip"
     echo "Results saved to report_$ip.txt"
     echo "Summary saved to summary.txt"
+
+    # If an email address was provided, send an email notification with the scan results
+    if [ -n "$email" ]; then
+        echo "Sending email notification to $email..."
+        mail -s "Scan Results for IP $ip" $email < report_$ip.txt
+    fi
+
 done
 
 echo "========================================================"
