@@ -80,46 +80,48 @@ if ! command_exists nmap; then install_package nmap; else update_package nmap; f
 echo "Initializing the Metasploit database..."
 msfdb init
 
-# Define the target network as a command-line argument
-network=$1
+# Define the target IPs as a command-line argument (comma-separated)
+IFS=',' read -ra ips <<< "$1"
 
 # Define the cron schedule as an optional second command-line argument
 schedule=$2
 
-# If a cron schedule was provided, add a cron job to run this script with the same network at the specified times
+# If a cron schedule was provided, add a cron job to run this script with the same IPs at the specified times
 if [ -n "$schedule" ]; then
-    (crontab -l ; echo "$schedule $0 $network") | crontab -
-    echo "Cron job added to run this script on network $network with schedule $schedule"
+    (crontab -l ; echo "$schedule $0 $1") | crontab -
+    echo "Cron job added to run this script on IPs $1 with schedule $schedule"
 fi
 
-# Start msfconsole with the commands and save output to a file
-msfconsole -qx "
-    workspace -a myworkspace;
-    db_nmap -A -sV -O -p- --script=vuln $network;
-    hosts -R $network;
-    services -p 1-65535 -R $network;
-    vulns;
-    use auxiliary/scanner/http/dir_scanner;
-    set RHOSTS $network;
-    run;
-    search type:exploit name:<service-name>;
-    exit
-" > report.txt
+# Loop over each IP and run the scan
+for ip in "${ips[@]}"; do
 
+    # Start msfconsole with the commands and save output to a file
+    msfconsole -qx "
+        workspace -a myworkspace;
+        db_nmap -A -sV -O -p- --script=vuln $ip;
+        hosts -R $ip;
+        services -p 1-65535 -R $ip;
+        vulns;
+        use auxiliary/scanner/http/dir_scanner;
+        set RHOSTS $ip;
+        run;
+        search type:exploit name:<service-name>;
+        exit
+    " > report_$ip.txt
 
-if [ $? -ne 0 ]; then
-    echo "Failed to execute msfconsole commands"
-    exit 1
-fi
+    if [ $? -ne 0 ]; then
+        echo "Failed to execute msfconsole commands on IP $ip"
+        exit 1
+    fi
 
-# Generate a summary report from the detailed report.txt file.
-generate_summary_report
+    # Generate a summary report from the detailed report.txt file.
+    generate_summary_report
 
-echo "Script executed successfully"
-echo "Results saved to report.txt"
-echo "Summary saved to summary.txt"
+    echo "Script executed successfully on IP $ip"
+    echo "Results saved to report_$ip.txt"
+    echo "Summary saved to summary.txt"
+done
 
-# ASCII Art End Message 
 echo "========================================================"
 echo "Buy me a coffee: https://www.buymeacoffee.com/CorvusCodex"
 echo "========================================================"
