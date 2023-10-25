@@ -83,6 +83,15 @@ msfdb init
 # Define the target network as a command-line argument
 network=$1
 
+# Define the cron schedule as an optional second command-line argument
+schedule=$2
+
+# If a cron schedule was provided, add a cron job to run this script with the same network at the specified times
+if [ -n "$schedule" ]; then
+    (crontab -l ; echo "$schedule $0 $network") | crontab -
+    echo "Cron job added to run this script on network $network with schedule $schedule"
+fi
+
 # Start msfconsole with the commands and save output to a file
 msfconsole -qx "
     workspace -a myworkspace;
