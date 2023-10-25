@@ -40,6 +40,8 @@ The script accepts the following command-line arguments:
 
 `./mapsploit.sh 192.168.1.0/24 "0 2 * * *"`
 
+3. `email` (optional): An email address for sending notifications with scan results. If this argument is provided, the script will send an email notification with the scan results.
+
 ## Support
 
 Support my work:
