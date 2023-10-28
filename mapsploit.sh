@@ -33,7 +33,7 @@ update_package () {
     fi
 }
 
-# Function to generate a summary report from the detailed report
+# Function to generate a summary report from the detailed report.txt file.
 generate_summary_report () {
     echo "Generating summary report..."
     grep -i "vulnerability" report.txt > summary.txt
@@ -82,6 +82,12 @@ if ! command_exists msfconsole; then install_package metasploit-framework; else 
 # Check if Nmap is installed and update it
 if ! command_exists nmap; then install_package nmap; else update_package nmap; fi
 
+# Check if anonsurf is installed, if not, install it
+install_package anonsurf
+
+# Check if macchanger is installed, if not, install it
+install_package macchanger
+
 # Initialize the Metasploit database
 echo "Initializing the Metasploit database..."
 msfdb init
@@ -101,8 +107,17 @@ if [ -n "$schedule" ]; then
     echo "Cron job added to run this script on IPs $1 with schedule $schedule"
 fi
 
-# Loop over each IP and run the scan
-for ip in "${ips[@]}"; do
+# Start anonsurf and change MAC address for anonymity 
+if command_exists anonsurf && command_exists macchanger; then 
+    echo "Starting anonymous mode..."
+    anonsurf start 
+
+    echo "Changing MAC address..."
+    macchanger -r eth0 
+fi 
+
+# Loop over each IP and run the scan 
+for ip in "${ips[@]}"; do 
 
     # Start msfconsole with the commands and save output to a file named with IP address for uniqueness 
     msfconsole -qx "
@@ -137,6 +152,12 @@ for ip in "${ips[@]}"; do
     fi
 
 done
+
+# Stop anonsurf after the operations are done
+if command_exists anonsurf; then 
+    echo "Stopping anonymous mode..."
+    anonsurf stop 
+fi 
 
 echo "========================================================"
 echo "Buy me a coffee: https://www.buymeacoffee.com/CorvusCodex"
