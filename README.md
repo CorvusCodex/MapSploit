@@ -4,8 +4,8 @@
 
 # MapSploit
 
-MapSploit is a bash script for a powerfull network vulnerability scanning. MapSploit checks if Metasploit and Nmap are installed on your system, installs them if they're not, and then uses them to scan a target network for vulnerabilities.
-
+MapSploit is a bash script for a powerfull anonymous network vulnerability scanning. MapSploit checks if Metasploit and Nmap are installed on your system, installs them if they're not, and then uses them to scan a target network for vulnerabilities.
+It starts anonsurf for anonymous internet surfing and changes the MAC address using macchanger before running the vulnerability scans.
 ## Installation
 
 1. Clone the repository:
