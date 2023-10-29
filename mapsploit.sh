@@ -120,7 +120,8 @@ fi
 for ip in "${ips[@]}"; do 
 
     # Start msfconsole with the commands and save output to a file named with IP address for uniqueness 
-    msfconsole -qx "
+    echo "Running scan on IP $ip with proxychains..."
+    proxychains msfconsole -qx "
         workspace -a myworkspace;
         db_nmap -A -sV -O -p- --script=vuln $ip;
         hosts -R $ip;
@@ -129,9 +130,20 @@ for ip in "${ips[@]}"; do
         use auxiliary/scanner/http/dir_scanner;
         set RHOSTS $ip;
         run;
-        search type:exploit name:<service-name>;
         exit
-    " > report_$ip.txt
+    " > report_$ip.txt &
+
+    # Parse the output file to extract service names
+    services=$(grep '/tcp' report_$ip.txt | awk '{print $3}')
+
+    # For each service, search for exploits
+    for service in $services; do
+        echo "Searching for exploits for service $service on IP $ip..."
+        proxychains msfconsole -qx "
+            search type:exploit name:$service;
+            exit
+        " >> report_$ip.txt &
+    done
 
     if [ $? -ne 0 ]; then
         echo "Failed to execute msfconsole commands on IP $ip"
@@ -152,6 +164,9 @@ for ip in "${ips[@]}"; do
     fi
 
 done
+
+# Wait for all background processes to finish
+wait
 
 # Stop anonsurf after the operations are done
 if command_exists anonsurf; then 
