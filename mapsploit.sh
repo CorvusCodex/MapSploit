@@ -91,18 +91,6 @@ if ! command_exists msfconsole; then install_package metasploit-framework; else 
 
 # Check if Nmap is installed and update it
 if ! command_exists nmap; then install_package nmap; else update_package nmap; fi
-echo "Running scan on IP $ip with proxychains..."
-    proxychains msfconsole -qx "
-        workspace -a myworkspace;
-        db_nmap -A -sV -O -p- --script=vuln $ip;
-        hosts -R $ip;
-        services -p 1-65535 -R $ip;
-        vulns;
-        use auxiliary/scanner/http/dir_scanner;
-        set RHOSTS $ip;
-        run;
-        exit
-    " > report_$ip.txt &
 
 # Check if macchanger is installed, if not, install it
 install_package macchanger
