@@ -76,12 +76,21 @@ install_package cron
 # Check if mail is installed, if not, install it
 install_package mailutils
 
+# Check if tor is installed, if not, install it
+install_package tor
+
+# Check if proxychains is installed, if not, install it
+install_package proxychains
+
+# Start the tor service
+echo "Starting tor service..."
+service tor start
+
 # Check if Metasploit is installed and update it
 if ! command_exists msfconsole; then install_package metasploit-framework; else update_package metasploit-framework; fi
 
 # Check if Nmap is installed and update it
 if ! command_exists nmap; then install_package nmap; else update_package nmap; fi
-
 echo "Running scan on IP $ip with proxychains..."
     proxychains msfconsole -qx "
         workspace -a myworkspace;
@@ -118,9 +127,7 @@ if [ -n "$schedule" ]; then
 fi
 
 # Start anonsurf and change MAC address for anonymity 
-if command_exists anonsurf && command_exists macchanger; then 
-    echo "Starting anonymous mode..."
-    anonsurf start 
+if command_exists macchanger; then 
 
     echo "Changing MAC address..."
     macchanger -r eth0 
