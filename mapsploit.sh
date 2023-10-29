@@ -43,6 +43,17 @@ generate_summary_report () {
     fi
 }
 
+# Function to stop tor service
+stop_tor () {
+    if pgrep tor > /dev/null; then
+        echo "Stopping tor service..."
+        sudo systemctl stop tor
+    fi
+}
+
+# Stop tor service when script exits
+trap stop_tor EXIT
+
 # ASCII Art
 echo "========================================================"
 echo "__  __             _____       _       _ _   "
@@ -76,24 +87,17 @@ install_package cron
 # Check if mail is installed, if not, install it
 install_package mailutils
 
-# Check if tor is installed, if not, install it
-install_package tor
-
-# Check if proxychains is installed, if not, install it
-install_package proxychains
-
-# Start the tor service
-echo "Starting tor service..."
-service tor start
-
 # Check if Metasploit is installed and update it
 if ! command_exists msfconsole; then install_package metasploit-framework; else update_package metasploit-framework; fi
 
 # Check if Nmap is installed and update it
 if ! command_exists nmap; then install_package nmap; else update_package nmap; fi
 
-# Check if macchanger is installed, if not, install it
-install_package macchanger
+# Check if tor is installed, if not, install it
+install_package tor
+
+# Check if torify is installed, if not, install it
+install_package torsocks
 
 # Initialize the Metasploit database
 echo "Initializing the Metasploit database..."
@@ -114,8 +118,10 @@ if [ -n "$schedule" ]; then
     echo "Cron job added to run this script on IPs $1 with schedule $schedule"
 fi
 
-# Start anonsurf and change MAC address for anonymity 
-if command_exists macchanger; then 
+# Start the tor service for anonymity 
+if command_exists tor && command_exists macchanger; then 
+    echo "Starting anonymous mode..."
+    service tor start 
 
     echo "Changing MAC address..."
     macchanger -r eth0 
@@ -125,8 +131,8 @@ fi
 for ip in "${ips[@]}"; do 
 
     # Start msfconsole with the commands and save output to a file named with IP address for uniqueness 
-    echo "Running scan on IP $ip with proxychains..."
-    proxychains msfconsole -qx "
+    echo "Running scan on IP $ip with torify..."
+    torify msfconsole -qx "
         workspace -a myworkspace;
         db_nmap -A -sV -O -p- --script=vuln $ip;
         hosts -R $ip;
@@ -137,18 +143,6 @@ for ip in "${ips[@]}"; do
         run;
         exit
     " > report_$ip.txt &
-
-    # Parse the output file to extract service names
-    services=$(grep '/tcp' report_$ip.txt | awk '{print $3}')
-
-    # For each service, search for exploits
-    for service in $services; do
-        echo "Searching for exploits for service $service on IP $ip..."
-        proxychains msfconsole -qx "
-            search type:exploit name:$service;
-            exit
-        " >> report_$ip.txt &
-    done
 
     if [ $? -ne 0 ]; then
         echo "Failed to execute msfconsole commands on IP $ip"
@@ -173,12 +167,6 @@ done
 # Wait for all background processes to finish
 wait
 
-# Stop anonsurf after the operations are done
-if command_exists anonsurf; then 
-    echo "Stopping anonymous mode..."
-    anonsurf stop 
-fi 
-
-echo "========================================================"
-echo "Buy me a coffee: https://www.buymeacoffee.com/CorvusCodex"
-echo "========================================================"
+# Stop the tor service after the operations are done
+if command_exists tor; then 
+    echo "Stopping anonymous mode...
