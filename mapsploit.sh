@@ -1,38 +1,5 @@
 #!/bin/bash
 
-# Function to check if a command exists
-command_exists () {
-    type "$1" &> /dev/null ;
-}
-
-# Function to install a package
-install_package () {
-    if ! command_exists $1; then
-        echo "$1 could not be found, would you like to install it now? (yes/no)"
-        read answer
-        if [ "$answer" != "${answer#[Yy]}" ] ;then
-            echo "Installing $1..."
-            apt-get install $1 -y
-            if [ $? -ne 0 ]; then
-                echo "Failed to install $1"
-                exit 1
-            fi
-        fi
-    fi
-}
-
-# Function to update a package
-update_package () {
-    if command_exists $1; then
-        echo "Updating $1..."
-        apt-get update && apt-get upgrade $1 -y
-        if [ $? -ne 0 ]; then
-            echo "Failed to update $1"
-            exit 1
-        fi
-    fi
-}
-
 # Function to generate a summary report from the detailed report.txt file.
 generate_summary_report () {
     echo "Generating summary report..."
@@ -81,24 +48,6 @@ then
     exit
 fi
 
-# Check if cron is installed, if not, install it
-install_package cron
-
-# Check if mail is installed, if not, install it
-install_package mailutils
-
-# Check if Metasploit is installed and update it
-if ! command_exists msfconsole; then install_package metasploit-framework; else update_package metasploit-framework; fi
-
-# Check if Nmap is installed and update it
-if ! command_exists nmap; then install_package nmap; else update_package nmap; fi
-
-# Check if tor is installed, if not, install it
-install_package tor
-
-# Check if torify is installed, if not, install it
-install_package torsocks
-
 # Initialize the Metasploit database
 echo "Initializing the Metasploit database..."
 msfdb init
@@ -130,7 +79,7 @@ fi
 # Loop over each IP and run the scan 
 for ip in "${ips[@]}"; do 
 
-    # Start msfconsole with the commands and save output to a file named with IP address for uniqueness 
+    # Start msfconsole with the commands and save output to a file named with IP address
     echo "Running scan on IP $ip with torify..."
     torify msfconsole -qx "
         workspace -a myworkspace;
