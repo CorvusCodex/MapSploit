@@ -68,7 +68,7 @@ if [ -n "$schedule" ]; then
 fi
 
 # Start the tor service for anonymity 
-if command_exists tor && command_exists macchanger; then 
+if true; then 
     echo "Starting anonymous mode..."
     service tor start 
 
