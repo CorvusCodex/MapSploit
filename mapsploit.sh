@@ -1,26 +1,4 @@
 #!/bin/bash
-
-# Function to generate a summary report from the detailed report.txt file.
-generate_summary_report () {
-    echo "Generating summary report..."
-    grep -i "vulnerability" report.txt > summary.txt
-    if [ $? -ne 0 ]; then
-        echo "Failed to generate summary report"
-        exit 1
-    fi
-}
-
-# Function to stop tor service
-stop_tor () {
-    if pgrep tor > /dev/null; then
-        echo "Stopping tor service..."
-        sudo systemctl stop tor
-    fi
-}
-
-# Stop tor service when script exits
-trap stop_tor EXIT
-
 # ASCII Art
 echo "========================================================"
 echo "__  __             _____       _       _ _   "
@@ -49,8 +27,8 @@ then
 fi
 
 # Initialize the Metasploit database
-echo "Initializing the Metasploit database..."
-msfdb init
+echo "Starting the Metasploit database..."
+msfdb start
 
 # Define the target IPs as a command-line argument (comma-separated)
 IFS=',' read -ra ips <<< "$1"
@@ -67,44 +45,41 @@ if [ -n "$schedule" ]; then
     echo "Cron job added to run this script on IPs $1 with schedule $schedule"
 fi
 
-# Start the tor service for anonymity 
-if true; then 
-    echo "Starting anonymous mode..."
-    service tor start 
-
-    echo "Changing MAC address..."
-    macchanger -r eth0 
-fi 
-
 # Loop over each IP and run the scan 
 for ip in "${ips[@]}"; do 
 
     # Start msfconsole with the commands and save output to a file named with IP address
     echo "Running scan on IP $ip with torify..."
-    torify msfconsole -qx "
+    msfconsole -qx "
         workspace -a myworkspace;
-        db_nmap -A -sV -O -p- --script=vuln $ip;
+        db_nmap -V -A -sV -O -p- --script=vuln $ip;
         hosts -R $ip;
         services -p 1-65535 -R $ip;
         vulns;
-        use auxiliary/scanner/http/dir_scanner;
-        set RHOSTS $ip;
-        run;
         exit
-    " > report_$ip.txt &
+    " > report_$ip.txt
 
-    if [ $? -ne 0 ]; then
-        echo "Failed to execute msfconsole commands on IP $ip"
-        exit 1
-    fi
+    echo "Scan completed for IP $ip. Now searching for exploits..."
+    
+    services=$(grep -oP 'Service: \K[^ ]+' report_$ip.txt)
 
-    # Generate a summary report from the detailed report.txt file.
-    generate_summary_report
+    for service in $services; do
+        echo "Searching for exploits for service: $service"
+        msfconsole -qx "
+            search type:exploit name:$service;
+            exit
+        " >> report_secondary_$ip.txt
 
+        if [ $? -ne 0 ]; then
+            echo "Failed to execute msfconsole command for service: $service"
+            exit 1
+        fi
+    done
+
+    echo "Exploit search completed for IP $ip."
     echo "Script executed successfully on IP $ip"
     echo "Results saved to report_$ip.txt"
-    echo "Summary saved to summary.txt"
-
+    
     # If an email address was provided, send an email notification with the scan results
     if [ -n "$email" ]; then
         echo "Sending email notification to $email..."
@@ -112,10 +87,3 @@ for ip in "${ips[@]}"; do
     fi
 
 done
-
-# Wait for all background processes to finish
-wait
-
-# Stop the tor service after the operations are done
-if command_exists tor; then 
-    echo "Stopping anonymous mode...
