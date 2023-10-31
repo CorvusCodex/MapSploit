@@ -45,7 +45,15 @@ if [ -n "$schedule" ]; then
     echo "Cron job added to run this script on IPs $1 with schedule $schedule"
 fi
 
-# Loop over each IP and run the scan 
+# Get all arguments as an array
+ips=("$@")
+
+# Check if any IPs were provided
+if [ ${#ips[@]} -eq 0 ]; then
+    echo "No IP addresses provided. Please provide at least one IP address."
+    exit 1
+fi
+
 for ip in "${ips[@]}"; do 
 
     # Start msfconsole with the commands and save output to a file named with IP address
@@ -75,6 +83,8 @@ for ip in "${ips[@]}"; do
             exit 1
         fi
     done
+done
+
 
     echo "Exploit search completed for IP $ip."
     echo "Script executed successfully on IP $ip"
