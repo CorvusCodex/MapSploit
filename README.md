@@ -35,11 +35,6 @@ The script accepts the following command-line arguments:
 
 1. `networks` (required): The target IPs to scan. This should be provided as a comma-separated list of IP addresses (e.g., `192.168.0.1,192.168.0.2`). `./mapsploit.sh "192.168.0.1,192.168.0.2" "0 2 * * *"`
 
-2. `schedule` (optional): A cron schedule for running the script at specific times. This should be provided in cron format (e.g., `0 2 * * *` for running the script every day at 2 AM). If this argument is provided, the script will add a cron job to run itself with the same network at the specified times.
-
-`./mapsploit.sh 192.168.1.0/24 "0 2 * * *"`
-
-3. `email` (optional): An email address for sending notifications with scan results. If this argument is provided, the script will send an email notification with the scan results.
 
 ## Support
 
