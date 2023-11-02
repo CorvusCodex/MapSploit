@@ -45,7 +45,7 @@ fi
 for ip in "${ips[@]}"; do 
 
     # Start msfconsole with the commands and save output to a file named with IP address
-    echo "Running scan on IP $ip with torify..."
+    echo "Running scan on IP $ip"
     msfconsole -qx "
         workspace -a myworkspace;
         db_nmap -V -A -sV -O -p- --script=vuln $ip;
