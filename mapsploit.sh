@@ -33,18 +33,6 @@ msfdb start
 # Define the target IPs as a command-line argument (comma-separated)
 IFS=',' read -ra ips <<< "$1"
 
-# Define the cron schedule as an optional second command-line argument
-schedule=$2
-
-# Define the email address as an optional third command-line argument
-email=$3
-
-# If a cron schedule was provided, add a cron job to run this script with the same IPs at the specified times
-if [ -n "$schedule" ]; then
-    (crontab -l ; echo "$schedule $0 $1") | crontab -
-    echo "Cron job added to run this script on IPs $1 with schedule $schedule"
-fi
-
 # Get all arguments as an array
 ips=("$@")
 
@@ -89,11 +77,5 @@ done
     echo "Exploit search completed for IP $ip."
     echo "Script executed successfully on IP $ip"
     echo "Results saved to report_$ip.txt"
-    
-    # If an email address was provided, send an email notification with the scan results
-    if [ -n "$email" ]; then
-        echo "Sending email notification to $email..."
-        mail -s "Scan Results for IP $ip" $email < report_$ip.txt
-    fi
 
 done
